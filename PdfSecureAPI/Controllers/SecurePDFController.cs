@@ -22,8 +22,8 @@ namespace PdfSecureAPI.Controllers
         {
             try
             {
-
-                var imageBytes = Convert.FromBase64String(req.Pdf);
+                var myStr = req.Pdf.Trim('"');
+                var imageBytes = Convert.FromBase64String(myStr);
                 MemoryStream mem = new MemoryStream(imageBytes);
 
 
