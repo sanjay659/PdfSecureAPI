@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PdfSecureAPI.Entity;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using pdf = PdfSharpCore;
 using pdfIO = PdfSharpCore.Pdf.IO;
 using PdfSharpCore.Pdf.Security;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Text;
+using PdfSecureAPI.Validation;
 
 namespace PdfSecureAPI.Controllers
 {
@@ -22,46 +20,57 @@ namespace PdfSecureAPI.Controllers
         {
             try
             {
-                var myStr = req.Pdf.Trim('"');
-                var imageBytes = Convert.FromBase64String(myStr);
-                MemoryStream mem = new MemoryStream(imageBytes);
+
+                if (ValidationCheck.IsBase64String(req.Pdf))
+                {
 
 
-                pdf.Pdf.PdfDocument document = pdf.Pdf.IO.PdfReader.Open(mem, pdfIO.PdfDocumentOpenMode.Modify);
-
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var enc1252 = Encoding.GetEncoding(1252);
-
-                PdfSecuritySettings securitySettings = document.SecuritySettings;
+                    var imageBytes = Convert.FromBase64String(req.Pdf);
+                    MemoryStream mem = new MemoryStream(imageBytes);
 
 
-                securitySettings.UserPassword = req.Password;
-                securitySettings.OwnerPassword = req.Password;
+                    pdf.Pdf.PdfDocument document = pdf.Pdf.IO.PdfReader.Open(mem, pdfIO.PdfDocumentOpenMode.Modify);
+
+                    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    var enc1252 = Encoding.GetEncoding(1252);
+
+                    PdfSecuritySettings securitySettings = document.SecuritySettings;
+
+
+                    securitySettings.UserPassword = req.Password;
+                    securitySettings.OwnerPassword = req.Password;
 
 
 
-                // Restrict some rights.
-                securitySettings.PermitAccessibilityExtractContent = false;
-                securitySettings.PermitAnnotations = false;
-                securitySettings.PermitAssembleDocument = false;
-                securitySettings.PermitExtractContent = false;
-                securitySettings.PermitFormsFill = true;
-                securitySettings.PermitFullQualityPrint = false;
-                securitySettings.PermitModifyDocument = true;
-                securitySettings.PermitPrint = false;
+                    // Restrict some rights.
+                    securitySettings.PermitAccessibilityExtractContent = false;
+                    securitySettings.PermitAnnotations = false;
+                    securitySettings.PermitAssembleDocument = false;
+                    securitySettings.PermitExtractContent = false;
+                    securitySettings.PermitFormsFill = true;
+                    securitySettings.PermitFullQualityPrint = false;
+                    securitySettings.PermitModifyDocument = true;
+                    securitySettings.PermitPrint = false;
 
-                MemoryStream ms = new MemoryStream();
-                document.Save(ms);
-                ms.Position = 0;
-                return new FileContentResult(ms.ToArray(), "application/pdf") { FileDownloadName = "test.pdf" };
+                    MemoryStream ms = new MemoryStream();
+                    document.Save(ms);
+                    ms.Position = 0;
+                    return new FileContentResult(ms.ToArray(), "application/pdf") { FileDownloadName = "test.pdf" };
 
-
+                }
+                else
+                {
+                    return new BadRequestResult();
+                }
 
             }
             catch (Exception ex)
             {
+
                 throw ex;
             }
         }
+
+        
     }
 }
